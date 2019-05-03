@@ -18,4 +18,5 @@ $./TCP_UDP
 
 # Limitações
 A comunicação via TCP está limitada a 2586539 bytes
+
 Na comunicação UDP a transferência de arquivos não está 100% implementada 
