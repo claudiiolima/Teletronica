@@ -74,6 +74,8 @@ private slots:
 
     void on_open_button_clicked();
 
+    void on_actionInstructions_triggered();
+
 private:
     Ui::MainWindow *ui;
     QString _protocol_client, _protocol_server;

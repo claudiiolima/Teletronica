@@ -3,8 +3,6 @@
 MyUdpServer::MyUdpServer(QObject *parent) : QObject(parent), parent(parent), _state(0)
 {
     socket = new QUdpSocket(this);
-//    connect(socket,SIGNAL(readyRead()),this,SLOT(receiveData()));
-//    socket->bind(ip,port);
 }
 
 void MyUdpServer::startServer(QHostAddress address, quint16 port)
@@ -44,26 +42,42 @@ QByteArray MyUdpServer::getData()
 
 void MyUdpServer::receiveData()
 {
+    QByteArray tmp;
+    datagram.clear();
     while(socket->hasPendingDatagrams()) {
-        datagram.resize(int(socket->pendingDatagramSize()));
+        tmp.resize(int(socket->pendingDatagramSize()));
 
         QHostAddress sender;
         quint16 senderPort;
 
-        socket->readDatagram(datagram.data(),datagram.size(),&sender,&senderPort);
-//        QFile file(QFileDialog::getSaveFileName(nullptr,tr("Abrir arquivo")));
-//        if (!file.fileName().isEmpty()) {
-//               // Write contents of ba in file
-//               file.write(datagram.data());
-//               // Close the file
-//               file.close();
-//            }
-//        QDesktopServices::openUrl(QUrl(file.fileName()));
+        socket->readDatagram(tmp.data(),tmp.size(),&sender,&senderPort);
+        socket->waitForReadyRead(5);
+        datagram.append(tmp);
+    }
+    QString type = datagram.mid(0,3);
+    datagram.remove(0,3);
+    if (!type.compare("FIL")) {
+        int i = QString(datagram.mid(0,1)).toInt();
+        datagram.remove(0,1);
+        QString suffix = datagram.mid(0,i);
+        datagram.remove(0,i);
+        QString filename = QFileDialog::getSaveFileName(nullptr,tr("Salvar arquivo"));
+        if (!filename.endsWith("."+suffix)) {
+            filename = filename + "." + suffix;
+        }
+        QFileInfo f(filename);
+        emit toUI(f.fileName());
 
-        qDebug() << "Message from: " << sender.toString();
-        qDebug() << "Message port: " << senderPort;
-        qDebug() << "Message: " << datagram;
+        QFile file(filename);
+        if (!file.open(QIODevice::WriteOnly))
+            return;
 
-        emit toUI(datagram);
+        file.write(datagram);
+        file.close();
+
+        QDesktopServices::openUrl(QUrl(filename));
+
+    } else if (!type.compare("MES")) {
+        emit toUI(QString(datagram));
     }
 }

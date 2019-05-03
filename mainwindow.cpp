@@ -84,6 +84,15 @@ void MainWindow::on_actionAbout_triggered()
     // MIT LICENSE
 }
 
+void MainWindow::on_actionInstructions_triggered()
+{
+    QMessageBox::information(this,tr("Instruções"),tr("O programa funciona ma forma de chat,"
+                                                      "Para conversar é necessário conhecer o endereço ip do "
+                                                      "destinatário, assim como o inverso."
+                                                      "Algumas limitações: tamanho máximo via TCP 2586539 bytes"
+                                                      "                                       UDP  xxxxxx bytes"));
+}
+
 
 // ////////////////////////////////////////////////////////////////////////////////////// //
 //                                      CLIENT METODES                                    //
@@ -171,19 +180,13 @@ void MainWindow::on_file_path_editingFinished()
 
 void MainWindow::on_send_button_clicked()
 {
-    for (int i = 0; i < 500000000; i++) {
+    for (int i = 0; i < 200000000; i++) {
         ui->progressBar->setTextVisible(true);
-        ui->progressBar->setValue(i/5000000);
+        ui->progressBar->setValue(i/2000000);
     }
     if (!_protocol_client.compare("TCP")) {
         if (!_type.compare("MESSAGE")) {
             _datagram.clear();
-//            QDataStream out(&_datagram,QIODevice::WriteOnly);
-//            out.setVersion(QDataStream::Qt_5_12);
-//            out << (_message.size()+_type.size());
-//            out << _type;
-//            out << _message;
-
             _datagram.append("MES");
             _datagram.append(_message);
             tcp_client.connect(_address_client,_port_client);
@@ -211,12 +214,12 @@ void MainWindow::on_send_button_clicked()
             if (!_file.open(QFile::ReadOnly))
                 return;
 
+            _datagram.append("FIL");
+            _datagram.append(QString::number(_suffix.size()).toUtf8());
+            _datagram.append(_suffix.toUtf8());
             _datagram.append(_file.readAll());
-            _datagram.prepend(_suffix.toUtf8());
-            _datagram.prepend(QString::number(_suffix.size()).toUtf8());
-            _datagram.prepend("FIL");
             _file.close();
-            tcp_client.connect();
+            tcp_client.connect(_address_client,_port_client);
             tcp_client.sendData(_datagram);
             if (_file.fileName().length() > 31) {
                 for (int i = 0; i < _file.fileName().length(); i+=31) {
@@ -237,6 +240,7 @@ void MainWindow::on_send_button_clicked()
     } else if (!_protocol_client.compare("UDP")) {
         if (!_type.compare("MESSAGE")) {
             _datagram.clear();
+            _datagram.append("MES");
             _datagram.append(_message);
             udp_client.sendData(_datagram,_address_client,_port_client);
             if (_message.length() > 31) {
@@ -255,7 +259,30 @@ void MainWindow::on_send_button_clicked()
             _message = "";
             ui->message->setText(_message);
         } else if (!_type.compare("FILE")) {
+            _datagram.clear();
+            _file.setFileName(_filename);
+            if (!_file.open(QFile::ReadOnly))
+                return;
+
+            _datagram.append("FIL");
+            _datagram.append(QString::number(_suffix.size()).toUtf8());
+            _datagram.append(_suffix.toUtf8());
+            _datagram.append(_file.readAll());
+            _file.close();
             udp_client.sendData(_datagram,_address_client,_port_client);
+            if (_file.fileName().length() > 31) {
+                for (int i = 0; i < _file.fileName().length(); i+=31) {
+                    ui->message_list->addItem(_file.fileName().mid(i,31));
+                    ui->message_list->item(_row)->setTextAlignment(Qt::AlignRight);
+                    ui->message_list->item(_row)->setBackgroundColor("#DFFDC1");
+                    _row++;
+                }
+            } else {
+                ui->message_list->addItem(_file.fileName());
+                ui->message_list->item(_row)->setTextAlignment(Qt::AlignRight);
+                ui->message_list->item(_row)->setBackgroundColor("#DFFDC1");
+                _row++;
+            }
         }
         ui->progressBar->setValue(0);
     }
