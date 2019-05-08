@@ -51,7 +51,6 @@ void MyUdpServer::receiveData()
         quint16 senderPort;
 
         socket->readDatagram(tmp.data(),tmp.size(),&sender,&senderPort);
-        socket->waitForReadyRead(5);
         datagram.append(tmp);
     }
     QString type = datagram.mid(0,3);
