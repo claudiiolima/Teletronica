@@ -86,11 +86,11 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_actionInstructions_triggered()
 {
-    QMessageBox::information(this,tr("Instruções"),tr("O programa funciona ma forma de chat,"
+    QMessageBox::information(this,tr("Instruções"),tr("O programa funciona na forma de chat."
                                                       "Para conversar é necessário conhecer o endereço ip do "
                                                       "destinatário, assim como o inverso."
                                                       "Algumas limitações: tamanho máximo via TCP 2586539 bytes"
-                                                      "                                       UDP  xxxxxx bytes"));
+                                                      "                                       UDP  próximode de 100000 bytes"));
 }
 
 
